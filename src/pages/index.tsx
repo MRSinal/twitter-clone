@@ -8,19 +8,38 @@ import type { RouterOutputs } from "~/utils/api";
 import dayjs from "dayjs"
 import { LoadingPage } from "../components/Loading";
 import relativeTime from "dayjs/plugin/relativeTime";
+import React, { useState } from "react";
 
 
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const { user } = useUser();
-  console.log(user)
+  const [input, setInput] = useState<string>("")
+
+  const ctx = api.useContext();
+  const { mutate, isLoading: isPosting } = api.post.create.useMutation({
+    onSuccess: () => {
+      setInput("")
+      void ctx.post.getAll.invalidate()
+  }
+});
   if (!user) return null;
 
   return (
     <div className="flex gap-4 w-full">
       <Image src={user.profileImageUrl} alt="Profile Image" className="w-16 h-16 rounded-full" width={64} height={64} />
-      <input placeholder="Type some emojies....." className="bg-transparent grow outline-none" />
+      <input placeholder="Type some emojies....." 
+      className="bg-transparent grow outline-none" 
+      type = "text"
+      value = {input}
+      onChange={(e) => setInput(e.target.value)}
+      disabled={isPosting}
+      />
+      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold px-8 rounded " onClick={() => {
+        mutate({ content: input })
+        
+      }}>Post</button>
     </div>
   )
 
@@ -58,7 +77,7 @@ const Feed = () => {
   if (!data) return <div>No posts</div>
   return (
     <div className="flex flex-col">
-      {data?.map((fullPost) => (
+      {data.map((fullPost) => (
         <PostView {...fullPost} key={fullPost.post.id} />
       ))}
     </div>
