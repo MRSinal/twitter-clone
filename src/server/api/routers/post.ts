@@ -2,13 +2,19 @@ import { clerkClient } from "@clerk/nextjs";
 import { TRPCError } from "@trpc/server";
 import type { User } from "node_modules/@clerk/nextjs/dist/types/server/clerkClient";
 import { z } from "zod";
-
+import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
+import { Redis } from "@upstash/redis";
 import { createTRPCRouter, privateProcedure, publicProcedure } from "~/server/api/trpc";
 
 const filterUserForClient = (user: User) => {
   return {id: user.id, name: user.username, profilePicture: user.profileImageUrl}
 }
-
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(3, "1 m"),
+  analytics: true,
+  prefix: "@upstash/ratelimit",
+});
 export const postRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts= await ctx.db.post.findMany({
@@ -24,13 +30,13 @@ export const postRouter = createTRPCRouter({
     return posts.map(post =>{ 
       const author = users.find(user => user.id === post.authorId)
 
-      if(!author || !author.name) throw new TRPCError({code : "INTERNAL_SERVER_ERROR",
+      if(!author?.name) throw new TRPCError({code : "INTERNAL_SERVER_ERROR",
       message: "Author not found"})
       return{
         post,
         author: {
           ...author,
-          name: author.name
+          name: author?.name
         },
       }
     })
@@ -42,7 +48,10 @@ export const postRouter = createTRPCRouter({
   })
   ).mutation(async ({ ctx, input }) => {
     const authorId = ctx.userId
-    
+    const {success} = await ratelimit.limit(authorId!)
+
+    if(!success) throw new TRPCError({code: "TOO_MANY_REQUESTS", message: "You are posting too much. Please try again later."};
+
     const post = await ctx.db.post.create({
       data: {
         authorId: authorId!,
