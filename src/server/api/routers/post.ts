@@ -50,7 +50,7 @@ export const postRouter = createTRPCRouter({
     const authorId = ctx.userId
     const {success} = await ratelimit.limit(authorId!)
 
-    if(!success) throw new TRPCError({code: "TOO_MANY_REQUESTS", message: "You are posting too much. Please try again later."};
+    if(!success) throw new TRPCError({code: "TOO_MANY_REQUESTS", message: "You are posting too much. Please try again later."})
 
     const post = await ctx.db.post.create({
       data: {
