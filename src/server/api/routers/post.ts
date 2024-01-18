@@ -44,7 +44,7 @@ export const postRouter = createTRPCRouter({
 
 
   create: privateProcedure.input(z.object({
-    content: z.string().emoji().min(1).max(280),
+    content: z.string().emoji("Only Emojis💀").min(1).max(280),
   })
   ).mutation(async ({ ctx, input }) => {
     const authorId = ctx.userId
@@ -55,8 +55,9 @@ export const postRouter = createTRPCRouter({
     const post = await ctx.db.post.create({
       data: {
         authorId: authorId!,
-        content: input.content
+        content: input.content,
       },
     });
+    return post
   }),
 });
