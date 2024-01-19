@@ -1,16 +1,29 @@
 ; import Head from "next/head";
-import { LoadingPage } from "../components/Loading";
 import React, { useState } from "react";
 import zod from "zod";
 import { api } from "~/utils/api";
-import { createSSGHelpers } from '@trpc/react/ssg';
 import { appRouter } from "~/server/api/root";
 import { db } from "~/server/db";
 import superjson from "superjson";
-import { GetServerSidePropsContext, GetStaticProps, InferGetServerSidePropsType } from "next";
+import { GetServerSidePropsContext,  InferGetServerSidePropsType } from "next";
 import { createServerSideHelpers } from '@trpc/react-query/server';
 import Layout from "~/components/layout";
 import Image from 'next/image'
+import { LoadingPage } from "../components/Loading";
+import { PostView } from "../components/postview";
+interface Post {
+  id: string;
+  // other post properties
+}
+const ProfileFeed = (props: { userId: string }) => {
+  const { data, isLoading, error } = api.post.getPostsByUserId.useQuery({userId: props.userId})
+  
+  if (isLoading) return <LoadingPage></LoadingPage>
+  if(!Array.isArray(data) || data.length === 0) return <div>User has not posted</div>
+  return (<div className="flex flex-col"> {data.map((fullPost) => (<PostView {...fullPost} key={fullPost.post.id} />))}</div>)
+}
+
+
 type PageProps = InferGetServerSidePropsType<typeof getStaticProps>
 export default function ProfilePage({ username }: PageProps) {
   const { data } = api.profile.getUserByName.useQuery({ username })
@@ -33,6 +46,7 @@ export default function ProfilePage({ username }: PageProps) {
         <div className="h-[64px]"></div>
         <div className="p-5 text-2xl font-bold">{`@${data.name ?? ""} `}</div>
         <div className="border-b border-slate-400 w-full"></div>
+        <ProfileFeed userId={data.id}/>
       </Layout>
     </>
   )
