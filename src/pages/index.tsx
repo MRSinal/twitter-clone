@@ -11,6 +11,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import zod from "zod";
+import Layout from "~/components/layout";
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
@@ -122,23 +123,12 @@ export default function Home() {
 
 
   return (
-    <>
-      <Head>
-        <title>Twitter Clone</title>
-        <meta name="description" content="Twitter clone" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main className="flex justify-center h-screen">
-        <div className="w-full md:max-w-2xl border-x border-slate-400 ">
+    <Layout>
           <div className="border-b border-slate-400 p-4 flex">
             {!isSignedIn && <div className="flex justify-center"><SignInButton /></div>}
             {isSignedIn && <CreatePostWizard />}
           </div>
-
           <Feed />
-        </div>
-
-      </main>
-    </>
+    </Layout>
   )
 }

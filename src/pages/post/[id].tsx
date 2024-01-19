@@ -7,8 +7,8 @@ import zod from "zod";
 export default function PostPage() {
   return (
     <>
-      <Head>
-        <title>Twitter Clone</title>
+    <Head>
+        <title>Post</title>
         <meta name="description" content="Twitter clone" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
